@@ -1,6 +1,6 @@
 % Es 2
 for i=1:9:54
-x_1=X_C(31:end);
+x_1=X_C(31:end)-0.01;
 eta_1=i/NY*0.005.*sqrt(U_inf./(ni*x_1));
 
 den=U_inf.*(sqrt(x_1*U_inf/(ni)));
@@ -30,28 +30,30 @@ plot(eta, 0.5*(eta.*f_prime-f),'LineWidth',2)
 legend('theoretical u-velocity','theoretical v-velocity')
 title('Theoretical Results')
 
-my_x=0.10;
-my_eta=Y_C.*sqrt(U_inf./(ni*my_x));
+x_adj=X_C(31:end)-0.01;
+my_eta=sqrt(U_inf./(ni.*x_adj))'*Y_C;
 
 my_u=U1/U_inf;
-my_v=V1/U_inf.*(sqrt(my_x*U_inf/(ni)));
+my_v=V1(n+30,:)/U_inf*(sqrt(x_adj(n)*U_inf/ni));
+
+n=100;
 
 figure
-plot(my_eta,my_u(220,:),'g','LineWidth',2);
-xline(5,'LineWidth',2)
+plot(my_eta(n,:),my_u(30+n,:),'g','LineWidth',2);
 grid on
 hold on
-plot(my_eta,my_v(220,:), 'y', 'LineWidth',2);
+plot(my_eta(n,:),my_v, 'y', 'LineWidth',2);
 yline(0.8604,'LineWidth',2)
+xline(5,'LineWidth',2)
 legend('empirical u-velocity','empirical v-velocity')
-title('Empirical Results')
+title('Empirical Results at x=0.14')
 
 figure
 plot(eta, f_prime, 'r', 'LineWidth',2)
 hold on
 grid on
-plot(my_eta,my_u(220,:),'m','LineWidth',2);
-legend('Blausius','Giulia')
+plot(my_eta(n,:),my_u(30+n,:),'m','LineWidth',2);
+legend('Blausius','My solution')
 title('Comparison between emprical evidence and Blausius solution')
 xlim([0 7])
 
@@ -59,13 +61,13 @@ figure
 plot(eta, 0.5*(eta.*f_prime-f), 'r', 'LineWidth',2)
 hold on
 grid on
-plot(my_eta,my_v(220,:),'m','LineWidth',2);
-legend('Blausius','Giulia')
+plot(my_eta(n,:),my_v,'m','LineWidth',2);
+legend('Blausius','My solution')
 title('Comparison between emprical evidence and Blausius solution')
 xlim([0 7])
 
 Re=@(x) U_inf*x/ni;
-Rex=Re(X_C(31:end));
+Rex=Re(X_C(31:end)-0.01);
 
 my_tw=rho*ni*DUDY(31:end,1);
 
@@ -77,26 +79,43 @@ plot(Rex,cf_blausius,'LineWidth',2)
 hold on
 grid on
 plot(Rex,my_cf,'LineWidth',2)
-legend('Blausius','Giulia')
+legend('Blausius','My solution')
 title('C_{f} profile')
 
-my_x=X_C(31:end);
+my_x=X_C(31:end)-0.01;
 
-fun=1-my_u;
-fun2=my_u.*(1-my_u);
 
-my_delta=sqrt(ni*my_x/U_inf)./my_x;
+my_delta=ones(1,300);
+
+for i=1:300
+    for j=1:54
+        if(my_u(30+i,j)>=0.99) 
+            my_delta(i)=Y_C(j)./x_adj(i);
+            break;
+        else
+            continue;
+        end
+    end
+end
+
 my_delta_star=zeros(1,300);
 my_theta=zeros(1,300);
 
+h=[Y_C(1) diff(Y_C)];
+
 for i=31:1:300
-my_delta_star(i)=integral(fun(i,:),0,inf)./my_x(i);
-my_theta(i)=integral(fun2(i,:),0,inf)./my_x(i);
+    for j=1:54 
+    my_delta_star(i)=my_delta_star(i)+h(j)*(1-my_u(30+i,j));
+    my_theta(i)=my_theta(i)+h(j)*(1-my_u(30+i,j))*my_u(30+i,j);
+    end
 end
 
-delta_bl=0.370*Rex.^(-1/5);
-delta_star_bl=0.463*Rex.^(-1/5);
-theta_bl=0.036*Rex.^(-1/5);
+my_delta_star=my_delta_star./x_adj;
+my_theta=my_theta./x_adj;
+
+delta_bl=5*Rex.^(-1/2);
+delta_star_bl=1.7208*Rex.^(-1/2);
+theta_bl=0.664*Rex.^(-1/2);
 
 figure
 plot(Rex,my_delta,'g','LineWidth',2)
@@ -105,6 +124,7 @@ grid on
 plot(Rex,delta_bl,'m','LineWidth',2)
 legend('Empirical','Blasius')
 title('Comparison of Delta')
+ylim([0 0.4])
 
 
 figure
