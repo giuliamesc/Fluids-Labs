@@ -31,7 +31,14 @@ f_buoyancy=mean(Fy);
 % plot(Fy) %more oscillations: there is a flow
 
 %2
-noise=std(Fy);
+load('FORCEdata_nowater.mat');
+noise1=std(Fx);
+noise2=std(Fy);
+
+load('FORCEdata_stillwater.mat');
+noise3=std(Fx);
+noise4=std(Fy);
+
 
 %3
 load('FORCEdata_flow.mat');
@@ -41,15 +48,15 @@ Re=rho*D*U_b/mu;
 
 %4
 A=L*D;
-Fy=Fy-f_buoyancy;
+Fl=Fy-f_buoyancy;
 RA_Fd=mean(Fx);
-RA_Fl=mean(Fy);
+RA_Fl=mean(Fl);
 RA_Cd=RA_Fd/(0.5*rho*U_b^2*A);
 RA_Cl=RA_Fl/(0.5*rho*U_b^2*A);
 
 %5
-ns=length(Fy);
-Fl_fourier=fft(Fy-mean(Fy))/ns;
+ns=length(Fl);
+Fl_fourier=fft(Fl-mean(Fl))/ns;
 ff=[0:(ns-1)]/ns*fs;
 figure,plot(ff,2*abs(Fl_fourier));
 xlim([0 fs/2]);
@@ -58,14 +65,17 @@ St=f*D/U_b;
 
 %6
 f_co=2*f;
-fir=fir1(20000,f_co/(fs/2));
-Fl_filt=filtfilt(fir,1,Fy);
+ny=fs/2;
+t=[0:(ns-1)]/fs;
+fir=fir1(20000,f_co/ny);
+Fl_filt=filtfilt(fir,1,Fl);
 figure
-plot([0:(ns-1)],Fy,'m')
+plot(t,Fl,'m')
 hold on
 grid on
-plot([0:(ns-1)],Fl_filt,'c','LineWidth',2)
+plot(t,Fl_filt,'c','LineWidth',2)
 legend('Experimental Measures','Filtred')
+xlim([40 60])
 
 %7
 h_peaks=findpeaks(Fl_filt);
@@ -77,27 +87,40 @@ cl_prime=al/(0.5*rho*U_b^2*A);
 
 %8
 unc_fd=0.045;
-unc_fl=0.025;
+unc_fl=sqrt(2)*0.025;
 
-unc_al=sqrt(2*unc_fl^2);
+unc_al=sqrt(2)*0.025;
 
 unc_area=sqrt((L*0.1e-3)^2+(D*0.5e-3)^2);
 unc_ub=sqrt((0.001/(h*B)*0.01*Q)^2+(0.001*Q/(h*B^2)*0.5e-3)^2+(0.001*Q/(h^2*B)*1e-3)^2);
 
-unc_cd=sqrt((unc_fd*1/(0.5*rho*U_b^2*A))^2+(unc_ub*2*Fx_mean/(0.5*rho*U_b^3*A))^2+(unc_area*Fx_mean/(0.5*rho*A^2*U_b^2))^2);
-unc_cl=sqrt((unc_fl*1/(0.5*rho*U_b^2*A))^2+(unc_ub*2*Fy_mean/(0.5*rho*U_b^3*A))^2+(unc_area*Fy_mean/(0.5*rho*A^2*U_b^2))^2);
-unc_clprime=sqrt(unc_al*1/(0.5*rho*U_b^2*A)^2+(unc_ub*2*al/(0.5*rho*U_b^3*A))^2+(unc_area*al/(0.5*rho*A^2*U_b^2))^2);
+unc_cd=sqrt((unc_fd*1/(0.5*rho*U_b^2*A))^2+(unc_ub*2*RA_Fd/(0.5*rho*U_b^3*A))^2+(unc_area*RA_Fd/(0.5*rho*A^2*U_b^2))^2);
+unc_cl=sqrt((unc_fl*1/(0.5*rho*U_b^2*A))^2+(unc_ub*2*RA_Fl/(0.5*rho*U_b^3*A))^2+(unc_area*RA_Fl/(0.5*rho*A^2*U_b^2))^2);
+
+unc_clpr=sqrt((unc_al*1/(0.5*rho*U_b^2*A))^2+(unc_ub*2*al/(0.5*rho*U_b^3*A))^2+(unc_area*al/(0.5*rho*A^2*U_b^2))^2);
 
 %9
-load('FORCEdata_NatOsc.mat');
-V=Dati(1,:);
+load('FORCEdata_NatOsc_corrected.mat');
 fs=200;
-ns=length(V);
-V_fourier=fft(V-mean(V))/ns;
+ns=length(Fx);
+t2=[0:(ns-1)]/fs;
+figure
+subplot(2,1,1)
+plot(t2,Fx)
+subplot(2,1,2)
+plot(t2,Fy)
+
+Fx_fourier=fft(Fx-mean(Fx))/ns;
 ff=[0:(ns-1)]/ns*fs;
-figure,plot(ff,2*abs(V_fourier));
+figure,plot(ff,2*abs(Fx_fourier));
 xlim([0 fs/2]);
-f=7.563;
+f1=7.563;
+
+Fy_fourier=fft(Fy-mean(Fy))/ns;
+ff=[0:(ns-1)]/ns*fs;
+figure,plot(ff,2*abs(Fy_fourier));
+xlim([0 fs/2]);
+f2=30.69;
 
 %10
 load('FORCEdata_stillwater2.mat');
@@ -111,8 +134,25 @@ RA_Cd2=RA_Fd2/(0.5*rho*U_b^2*A);
 RA_Cl2=RA_Fl2/(0.5*rho*U_b^2*A);
 
 %contribution of endplates
-contr_endplates=abs(Fy_2/Fy);
-rate_drag=RA_Cd2/RA_Cd;
-rate_lift=RA_Cl2/RA_Cl;
-Cy_weigth=f_buoyancy2;
+Q2=56.3;
+U_b2=0.001*Q2/A_ch;
 
+RA_Fd_Ub=RA_Fd2*(U_b/U_b2)^2;
+RA_Fl_Ub=RA_Fl2*(U_b/U_b2)^2;
+
+Fym=f_buoyancy;
+Sc=rho*9.8*L*pi*(D/2)^2;
+Se=Fym-Sc;
+Fym2=f_buoyancy2;
+weigth=Fym2-Se;
+
+rate_Fd=RA_Fd_Ub/(0.5*rho*A*U_b^2);
+rate_Fl=RA_Fl_Ub/(0.5*rho*A*U_b^2);
+
+%11
+
+dh=2e-3;
+Ax=(180*2)*1e-6;
+dS=2*rho*9.8*dh*Ax;
+
+err_RA_Cl=dS/(0.5*rho*A*U_b^2);
