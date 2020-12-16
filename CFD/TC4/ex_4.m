@@ -52,11 +52,12 @@ legend('Experimental','Potential flow solution')
 xlim([0 pi])
 
 %4
+
 p_wall=P_avg(:,2);
+dy=(Y_C(3)-Y_C(2));
+tau_wall=mu*(U1_avg(:,3)-U1_avg(:,2))/dy;
 
-%SISTEMARE T_WALL
-
-s_angle=X_C(40);
+s_angle=X_C(42);
 s_angle_deg=s_angle*180/pi;
 
 %5
