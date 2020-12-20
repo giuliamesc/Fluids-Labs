@@ -1,26 +1,39 @@
 % Es 2
-for i=1:9:54
-x_1=X_C(31:end)-0.01;
-eta_1=i/NY*0.005.*sqrt(U_inf./(ni*x_1));
+
+%plot, for different x values, U and V as functions of eta; we see that
+%the plots collapse over each other
+
+figure
+for i=31:10:330
+x_1=X_C(i)-0.01;
+eta_1=Y_C/NY*0.005.*sqrt(U_inf./(ni*x_1));
 
 den=U_inf.*(sqrt(x_1*U_inf/(ni)));
-num=V1(31:end,i)';
+num=V1(i,:)';
 
 u_1=U1/U_inf;
 v_1=num./den;
 
-figure
-plot(eta_1,u_1(31:end,i),'LineWidth',2)
+subplot(1,2,1)
+plot(eta_1,u_1(i,:),'LineWidth',2)
 grid on
 hold on
+title('Self-similarity of the empirical solution (u)')
+
+subplot(1,2,2)
 plot(eta_1,v_1,'LineWidth',2)
-legend('u-velocity','v-velocity')
-title('Self-similarity of the empirical solution')
+grid on
+hold on
+title('Self-similarity of the empirical solution (v)')
 end
+
+
 
 f=[0 0.026 0.1655 0.323 0.65 0.992 1.397 1.7469 2.305 2.692 3.283 4.279 5.279];
 f_prime=[0 0.133 0.3298 0.4563 0.63 0.7289 0.846 0.9017 0.956 0.9758 0.992 0.998 0.999];
 eta=[0 0.4 1 1.4 2 2.4 3 3.4 4 4.4 5 6 7];
+
+n=100;
 
 figure
 plot(eta, f_prime,'LineWidth',2)
@@ -104,7 +117,7 @@ my_theta=zeros(1,300);
 h=[Y_C(1) diff(Y_C)];
 
 for i=31:1:300
-    for j=1:54 
+    for j=1:54
     my_delta_star(i)=my_delta_star(i)+h(j)*(1-my_u(30+i,j));
     my_theta(i)=my_theta(i)+h(j)*(1-my_u(30+i,j))*my_u(30+i,j);
     end
